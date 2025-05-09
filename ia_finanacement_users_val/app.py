@@ -1,5 +1,5 @@
 import streamlit as st
-from rag_pipelines import process_new_doc, process_existing_doc, QA_pipeline, update_hybrid_rag_wrapper
+from rag_pipelines import process_new_doc, process_existing_doc, QA_pipeline, update_hybrid_rag_wrapper, adjust_resp
 from graphrag_retriever import load_knowledgeGraph_vis
 from io import StringIO
 import asyncio
@@ -10,7 +10,6 @@ import json
 from read_answer_aap import Read_Questions_in_docx, Write_Answers_in_docx
 from pathlib import Path
 import traceback
-
 
 # pour télécharger l'AAP en docx
 from docx import Document
@@ -84,49 +83,6 @@ def stream_hybridRAG_response(stream_resp, response_container):
     # 3. Récupérer la réponse complète
     st.session_state["full_response"] = response_buffer.getvalue()
     response_buffer.close()
-
-
-
-def adjust_resp(resp, size_answer): # Ajout JF pour prise en compte size
-    """
-        #### Function definition:
-        Adjust the size of the response to the user
-
-        #### Inputs :
-        **resp**: the response to be adjusted
-        **size_answer**: the size of the answer required by the user
-
-        #### Outputs:
-        A generator function containing return information in str format.
-    """
-    
-    if size_answer!="":
-        system="""
-            summarize the text {resp} into a text of {size_answer}, keeping the main ideas
-            #### Response Format:
-            it must be clear, easy to understand and the language must be the same as the input
-        """
-
-        adjust_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system),
-                (
-                    "human",
-                    "Here is the initial text: \n\n {resp} \n summarize it in a text of {size_answer}.",
-                ),
-            ]
-        )
-        llm_adjuster = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5)
-        adjustor_resp = adjust_prompt | llm_adjuster | StrOutputParser()
-        adjusted_resp = adjustor_resp.invoke({"resp": resp, "size_answer": size_answer})
-    else:
-        adjusted_resp=""
-    
-    return adjusted_resp
-
-
-
-
 
 
 # chargement du log des documents dispo en DB
@@ -454,7 +410,7 @@ def main():
         st.write("#### Saisie manuelle")
         with st.expander("Zone saisie de question"):
             user_query = st.text_input(label="Votre question", placeholder="")
-            user_query_size = st.text_input(label="Taille de réponse souhaitée", placeholder="") # Ajout JF pour prise en compte size
+            user_query_size = st.text_input(label="Taille de réponse souhaitée", placeholder="")
 
             col_query1, col_query2, col_query3=st.columns(3, gap="small", vertical_alignment="center", border=False)
 
@@ -505,7 +461,7 @@ def main():
 
         # === Saisie manuelle ===
         if btn_process_user_query and user_query.strip() != "":
-            queries = [{"question": user_query, "size_answer": user_query_size}] # Ajout JF pour prise en compte size
+            queries = [{"question": user_query, "size_answer": user_query_size}]
             st.session_state["trigger_query"] = False  # reset
 
         # === Traitement AAP (json/docx) ===
@@ -516,16 +472,6 @@ def main():
                 if uploaded_aap.name.endswith(".docx"):
                     st.info("📄 Traitement automatique du fichier AAP...")
 
-                    list_of_SizeWords_OK = [
-                        " MAX", " MIN", " CARACT", " CHARACT", " LIGNE", " LINE", " SIGN", " PAGE",
-                        " PAS EXC", " NOT EXCEED", " MOTS", " WORDS"
-                    ]
-                    list_of_SizeWords_KO = [
-                        " SIGNAT", " MAXIMI", " MONTH", " MOIS", " ANS", " ANNé", " YEAR", " DAY", " JOUR",
-                        " DURéE", " DURATION", " IMPACT", " AMOUNT", " MONTANT"
-                    ]
-                    TagQStart = "<>"
-                    TagQEnd = "</>"
 
                     # Construction du chemin absolu pour AAP, LOG et output_aap
                     source_aap = SCRIPT_DIR / "AAP/" # répertoire pour l'AAP source (non rempli)
@@ -537,19 +483,20 @@ def main():
 
                     # Construction du chemin complet avec chemin absolu
                     file_path_in = source_aap / safe_name 
+                    file_path_log = hidden_log / safe_name 
                     file_path = output_aap / safe_name
 
                     # Création du dossier parent si nécessaire
                     file_path_in.parent.mkdir(parents=True, exist_ok=True)
-                    hidden_log.parent.mkdir(parents=True, exist_ok=True)
+                    file_path_log.parent.mkdir(parents=True, exist_ok=True)
                     file_path.parent.mkdir(parents=True, exist_ok=True)
 
                     print(f"Chemin absolu : {file_path}")
                     print(f"Chemin absolu : {file_path_in}")
-                    print(f"Chemin absolu : {hidden_log}")
+                    print(f"Chemin absolu : {file_path_log}")
 
                     # Suppression des anciens fichiers source (de source_aap) au cas où pas été supprimés dans traitements anciens
-                    for old_file_path in file_path_in.glob('*.*'):
+                    for old_file_path in source_aap.glob('*.*'):
                         try:
                             old_file_path.unlink()
                             print(f"Supprimé : {old_file_path}")
@@ -578,17 +525,10 @@ def main():
                     with open(file_path_in, "wb") as f:
                         f.write(uploaded_aap.getbuffer())
 
-                    #log_dir = os.path.join(outprut_aap, "logs")
-                    #os.makedirs(log_dir, exist_ok=True)
-
                     with st.spinner("🔍 Extraction des questions en cours..."):
                         extracted_questions = Read_Questions_in_docx(
                             PathFolderSource=source_aap,
                             PathForOutputsAndLogs=hidden_log,
-                            list_of_SizeWords_OK=list_of_SizeWords_OK,
-                            list_of_SizeWords_KO=list_of_SizeWords_KO,
-                            TagQStart=TagQStart,
-                            TagQEnd=TagQEnd
                         )
 
                     st.success("✅ Extraction terminée")
@@ -634,7 +574,7 @@ def main():
             #====== déterminer si requête manuelle ou process AAP
             #1. requête manuelle
             if btn_process_user_query:
-                queries=[{"question": user_query, "size_answer": user_query_size}] # Ajout JF pour prise en compte size
+                queries=[{"question": user_query, "size_answer": user_query_size}] 
 
 
 
@@ -679,14 +619,14 @@ def main():
                     # 3. les métadonnées (uid, question, type), et la réponse complète du flux 1 ci dessus
                     elif isinstance(resp, dict) and 'uid' in resp:
                         resp["response"]=st.session_state["full_response"]
-                        size_answer = resp["size_answer"]  # Ajout JF pour prise en compte size
-                        if size_answer!="":  # Ajout JF pour prise en compte size
-                            adjusted_resp=adjust_resp(resp["response"], size_answer)  # Ajout JF pour prise en compte size
-                            resp["adjusted_resp"]=adjusted_resp  # Ajout JF pour prise en compte size
+                        size_answer = resp["size_answer"] 
+                        if size_answer!="": 
+                            adjusted_resp=adjust_resp(resp["response"], size_answer)  
+                            resp["adjusted_resp"]=adjusted_resp 
 
-                            st.markdown(f"#### Réponse ajustée:\n", unsafe_allow_html=True)  # Ajout JF pour prise en compte size                
-                            response_container = st.empty()  # Ajout JF pour prise en compte size
-                            st.markdown(resp["adjusted_resp"], unsafe_allow_html=True)  # Ajout JF pour prise en compte size
+                            st.markdown(f"#### Réponse ajustée:\n", unsafe_allow_html=True)             
+                            response_container = st.empty()  
+                            st.markdown(resp["adjusted_resp"], unsafe_allow_html=True)  
 
 
                         if  btn_process_user_query and btn_display_metadata:

@@ -263,9 +263,7 @@ def Delete_Text_Cell (tableCell, Text_to_delete):
                 MyRun.font.color.rgb = MyFontColor
 
 # Fonction pour lire les questions et la taille des réponses souhaitée
-def Read_Questions_in_docx ( 
-        PathFolderSource, PathForOutputsAndLogs, list_of_SizeWords_OK, 
-        list_of_SizeWords_KO, TagQStart = "<>", TagQEnd = "</>" 
+def Read_Questions_in_docx (PathFolderSource, PathForOutputsAndLogs
     ):
     """
     Args:
@@ -284,6 +282,16 @@ def Read_Questions_in_docx (
     Multi_Paragraph = False 
     Go_DictionUID = False 
     Text_Question = ''
+    list_of_SizeWords_OK = [
+        " MAX", " MIN", " CARACT", " CHARACT", " LIGNE", " LINE", " SIGN", " PAGE",
+        " PAS EXC", " NOT EXCEED", " MOTS", " WORDS"
+    ]
+    list_of_SizeWords_KO = [
+        " SIGNAT", " MAXIMI", " MONTH", " MOIS", " ANS", " ANNé", " YEAR", " DAY", " JOUR",
+        " DURéE", " DURATION", " IMPACT", " AMOUNT", " MONTANT"
+    ]
+    TagQStart = "<>"
+    TagQEnd = "</>"
 
     # Récupération des fichiers avec chemins absolus
     FilesWithPath = [file.resolve() for file in PathFolderSource.glob('*.*')]

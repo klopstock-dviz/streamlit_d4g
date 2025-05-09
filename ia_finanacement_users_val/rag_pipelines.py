@@ -27,6 +27,44 @@ import dotenv
 dotenv.load_dotenv(".env")
 
 
+def adjust_resp(resp, size_answer): 
+    """
+        #### Function definition:
+        Adjust the size of the response to the user
+
+        #### Inputs :
+        **resp**: the response to be adjusted
+        **size_answer**: the size of the answer required by the user
+
+        #### Outputs:
+        A generator function containing return information in str format.
+    """
+    
+    if size_answer!="":
+        system="""
+            summarize the text {resp} into a text of {size_answer}, keeping the main ideas
+            #### Response Format:
+            it must be clear, easy to understand and the language must be the same as the input
+        """
+
+        adjust_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system),
+                (
+                    "human",
+                    "Here is the initial text: \n\n {resp} \n summarize it in a text of {size_answer}.",
+                ),
+            ]
+        )
+        llm_adjuster = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5)
+        adjustor_resp = adjust_prompt | llm_adjuster | StrOutputParser()
+        adjusted_resp = adjustor_resp.invoke({"resp": resp, "size_answer": size_answer})
+    else:
+        adjusted_resp=""
+    
+    return adjusted_resp
+
+
 pipeline_args={}
 def process_new_doc(uploaded_files, doc_name: str, doc_category: str):
     """
@@ -286,6 +324,8 @@ def update_hybrid_rag_wrapper(selected_reranker, top_k):
     return "Chaine RAG mise à jour"
 
 
+
+
 def QA_pipeline(queries: list, return_sources=True):
 
     """
@@ -293,7 +333,7 @@ def QA_pipeline(queries: list, return_sources=True):
         Build rag pipeline and submit queries\n
 
         ### Inputs:
-        **queries**: a list of user queries, where each element is either the raw query in str format + the size of the answer required, or a dict containing the raw query and other features
+        **queries**: a list of user queries, where each element is either the raw query in str format, or a dict containing the raw query and other features
         **return_sources**: a boolean flag to get back used sources
 
         ### Outputs:
@@ -583,7 +623,7 @@ def QA_pipeline(queries: list, return_sources=True):
     # question directe
     if "uid" not in queries[0]:
         for q in queries:
-            queries_norm.append({"uid": "xxx", "question": q["question"], "size_answer": q["size_answer"]}) # Ajout JF pour prise en compte size
+            queries_norm.append({"uid": "xxx", "question": q["question"]})
     else:
         queries_norm=queries
 
@@ -591,7 +631,6 @@ def QA_pipeline(queries: list, return_sources=True):
     for q in queries_norm:
 
         query=q["question"]
-        size_answer=q["size_answer"]  # Ajout JF pour prise en compte size
         
         # déterminer les types de la question
         #1. question ouverte/fermée
@@ -653,20 +692,17 @@ def QA_pipeline(queries: list, return_sources=True):
                     "question": enhanced_query, "query_language": query_source_language.type
                 })    
                 #yield stream_resp
-                                
                 yield {'question': q["question"], "response_stream": stream_resp, "hybridrag_stream": True}
                 
                 if return_sources:
                     yield {"sources": pipeline_args[f"hybrid_pipeline_{doc_category}"]["sources"]}
 
-                yield {'uid': q["uid"], "question": q["question"], 
-                    "size_answer": size_answer,  # Ajout JF pour prise en compte size
-                    "adjusted_resp": "",  # Ajout JF pour prise en compte size
+                yield {'uid': q["uid"], "question": q["question"], "size_answer": q["size_answer"],
                     "enhanced_question": enhanced_query, 
                     "question_close_or_open": openORclose_question.type,
-                    "question_asso_or_pp": question_asso_or_pp,
-                    "source_doc_language": pipeline_args[f"{doc_category}_source_language"],
-                    "translation_requiered": reverse_translation
+                        "question_asso_or_pp": question_asso_or_pp,
+                        "source_doc_language": pipeline_args[f"{doc_category}_source_language"],
+                        "translation_requiered": reverse_translation
                     }
 
             elif openORclose_question.type=="open":
@@ -681,9 +717,7 @@ def QA_pipeline(queries: list, return_sources=True):
                 yield {'question': q["question"], "response_stream": stream_resp, "pathrag_stream": True}
 
                 yield {
-                        'uid': q['uid'], "question": q["question"], "enhanced_question": enhanced_query, 
-                        "size_answer": size_answer,  # Ajout JF pour prise en compte size
-                        "adjusted_resp": "",  # Ajout JF pour prise en compte size
+                        'uid': q['uid'], "question": q["question"], "size_answer": q["size_answer"], "enhanced_question": enhanced_query, 
                         #"full_response": resp,
                         "question_close_or_open": openORclose_question.type,
                         "question_asso_or_pp": question_asso_or_pp,
