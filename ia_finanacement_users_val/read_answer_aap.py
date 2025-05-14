@@ -500,10 +500,10 @@ def Write_Answers_in_docx(List_UIDQuestionsSizeAnswer, PathFolderSource, PathFor
             for para in document.paragraphs:
                 for value in List_UIDQuestionsSizeAnswer:
                     if value["uid"] in para.text:
-                        if value["adjusted_resp"]!="": # Ajout JF pour prise en compte size
-                            Insert_Text_Paragraph(para, "", "\n" + value["adjusted_resp"]) # Ajout JF pour prise en compte size
-                            Delete_Text_Paragraph(para, value["uid"]) # Ajout JF pour prise en compte size
-                        else: # Ajout JF pour prise en compte size
+                        if value["adjusted_resp"]!="": 
+                            Insert_Text_Paragraph(para, "", "\n" + value["adjusted_resp"]) 
+                            Delete_Text_Paragraph(para, value["uid"]) 
+                        else: 
                             Insert_Text_Paragraph(para, "", "\n" + value["response"])
                             Delete_Text_Paragraph(para, value["uid"])
 
@@ -520,10 +520,10 @@ def Write_Answers_in_docx(List_UIDQuestionsSizeAnswer, PathFolderSource, PathFor
                     for cell in row.cells:
                         for value in List_UIDQuestionsSizeAnswer:
                             if value["uid"] in cell.text:
-                                if value["adjusted_resp"]!="": # Ajout JF pour prise en compte size
-                                    Insert_Text_Cell(cell, "", value["adjusted_resp"]) # Ajout JF pour prise en compte size
-                                    Delete_Text_Cell(cell, value["uid"]) # Ajout JF pour prise en compte size
-                                else: # Ajout JF pour prise en compte size
+                                if value["adjusted_resp"]!="": 
+                                    Insert_Text_Cell(cell, "", value["adjusted_resp"]) 
+                                    Delete_Text_Cell(cell, value["uid"]) 
+                                else: 
                                     Insert_Text_Cell(cell, "", value["response"])
                                     Delete_Text_Cell(cell, value["uid"])
 
@@ -550,9 +550,9 @@ def Write_Answers_in_docx(List_UIDQuestionsSizeAnswer, PathFolderSource, PathFor
                 run.bold = True
                 run.font.color.rgb = RGBColor(255, 0, 0)
                 documentQA.add_paragraph('\n' + value["response"] + '\n')
-                if value["adjusted_resp"]!="": # Ajout JF pour prise en compte size
-                    documentQA.add_paragraph('\n' + 'RÉPONSE RÉDUITE POUR RESPECTER LA TAILLE DEMANDÉE ' + '\n') # Ajout JF pour prise en compte size
-                    documentQA.add_paragraph('\n' + value["adjusted_resp"] + '\n') # Ajout JF pour prise en compte size
+                if value["adjusted_resp"]!="": 
+                    documentQA.add_paragraph('\n' + 'RÉPONSE RÉDUITE POUR RESPECTER LA TAILLE DEMANDÉE ' + '\n')
+                    documentQA.add_paragraph('\n' + value["adjusted_resp"] + '\n') 
 
 
             qa_filename = f'{NameOfDocument.replace("-with UID", "")}_Q-A_{timestamp}.docx'

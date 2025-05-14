@@ -483,17 +483,15 @@ def main():
 
                     # Construction du chemin complet avec chemin absolu
                     file_path_in = source_aap / safe_name 
-                    file_path_log = hidden_log / safe_name 
-                    file_path = output_aap / safe_name
 
                     # Création du dossier parent si nécessaire
-                    file_path_in.parent.mkdir(parents=True, exist_ok=True)
-                    file_path_log.parent.mkdir(parents=True, exist_ok=True)
-                    file_path.parent.mkdir(parents=True, exist_ok=True)
+                    Path(source_aap).mkdir(parents=True, exist_ok=True)
+                    Path(hidden_log).mkdir(parents=True, exist_ok=True)
+                    Path(output_aap).mkdir(parents=True, exist_ok=True)
 
-                    print(f"Chemin absolu : {file_path}")
-                    print(f"Chemin absolu : {file_path_in}")
-                    print(f"Chemin absolu : {file_path_log}")
+                    print(f"Chemin absolu avec fichier : {file_path_in}")
+                    print(f"Chemin absolu sans fichier: {hidden_log}")
+                    print(f"Chemin absolu sans fichier : {output_aap}")
 
                     # Suppression des anciens fichiers source (de source_aap) au cas où pas été supprimés dans traitements anciens
                     for old_file_path in source_aap.glob('*.*'):
