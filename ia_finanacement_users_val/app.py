@@ -497,7 +497,7 @@ def main():
                     for old_file_path in source_aap.glob('*.*'):
                         try:
                             old_file_path.unlink()
-                            print(f"Supprimé : {old_file_path}")
+                            print(f"Suppression fichiers AAP vierges préalable avant fonction Read : {old_file_path}")
                         except Exception as e:
                             print(f"Erreur lors de la suppression de l'ancien fichier source {old_file_path} : {e}")
 
@@ -505,7 +505,7 @@ def main():
                     for old_file_path in hidden_log.glob('*.*'):
                         try:
                             old_file_path.unlink()
-                            print(f"Supprimé : {old_file_path}")
+                            print(f"Suppression fichiers avec UID préalable avant fonction Read : {old_file_path}")
                         except Exception as e:
                             print(f"Erreur lors de la suppression de l'ancien fichier avec UID {old_file_path} : {e}")
 
@@ -513,7 +513,7 @@ def main():
                     for old_file_path in output_aap.glob('*.*'):
                         try:
                             old_file_path.unlink()
-                            print(f"Supprimé : {old_file_path}")
+                            print(f"Suppression fichiers AAP avec réponse et fichier QA préalable avant fonction Read : {old_file_path}")
                         except Exception as e:
                             print(f"Erreur lors de la suppression de l'ancien fichier AAP avec réponses {old_file_path} : {e}")
 
@@ -625,6 +625,8 @@ def main():
                             st.markdown(f"#### Réponse ajustée:\n", unsafe_allow_html=True)             
                             response_container = st.empty()  
                             st.markdown(resp["adjusted_resp"], unsafe_allow_html=True)  
+                        else:
+                            resp["adjusted_resp"]=""
 
 
                         if  btn_process_user_query and btn_display_metadata:
@@ -655,7 +657,7 @@ def main():
                 st.session_state["qa_filename"]=qa_filename
 
 
-                with open(output_file_path, "rb") as file:
+                with output_file_path.open (mode="rb+") as file:
                     aap_data = file.read()
                     
                 btn_down_aap = st.download_button(
@@ -673,7 +675,7 @@ def main():
 
 
                 # Bouton pour télécharger le fichier Q&A
-                with open(qa_file_path, "rb") as file:
+                with qa_file_path.open (mode="rb+") as file:
                     qa_data=file.read()
 
                 btn_down_qa= st.download_button(
@@ -697,7 +699,7 @@ def main():
             qa_filename=st.session_state["qa_filename"]
 
 
-            with open(output_file_path, "rb") as file:
+            with output_file_path.open (mode="rb+") as file: 
                 aap_data = file.read()
                 
             btn_down_aap = st.download_button(
@@ -714,7 +716,7 @@ def main():
 
 
             # Bouton pour télécharger le fichier Q&A
-            with open(qa_file_path, "rb") as file:
+            with qa_file_path.open (mode="rb+") as file: 
                 qa_data=file.read()
 
             btn_down_qa= st.download_button(

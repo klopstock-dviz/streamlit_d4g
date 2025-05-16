@@ -311,8 +311,7 @@ def Read_Questions_in_docx (PathFolderSource, PathForOutputsAndLogs
             print (MessageError)
 
     for file in FilesWithPath:
-
-        NameOfWorkDocument = os.path.splitext(os.path.basename(file))[0]
+        NameOfWorkDocument = file.name.split('.')[0]
         if EverythingOK and NameOfWorkDocument[len(NameOfWorkDocument)-9:] !="-with UID": 
             try:
                 docWork = docx.Document(file)
@@ -389,6 +388,13 @@ def Read_Questions_in_docx (PathFolderSource, PathForOutputsAndLogs
                                     DictQuestions.clear() 
                                     DictQuestions ["uid"] = uuid.uuid4().hex
                                     DictQuestions ["question"] = block_item.cell(row, col).text
+                                    DictQuestions ["size_answer"] = ''
+                                    DictQuestions ["enhanced_question"] = ''
+                                    DictQuestions ["question_is_open"] = ''
+                                    DictQuestions ["question_on_asso"] = ''
+                                    DictQuestions ["response"] = ''
+                                    DictQuestions ["adjusted_resp"]= ''
+
                                     below_is_a_size_for_response = False 
 
 
@@ -426,11 +432,6 @@ def Read_Questions_in_docx (PathFolderSource, PathForOutputsAndLogs
                                     else: 
                                         DictQuestions ["size_answer"] = ''
 
-                                    DictQuestions ["enhanced_question"] = ''
-                                    DictQuestions ["question_is_open"] = ''
-                                    DictQuestions ["question_on_asso"] = ''
-                                    DictQuestions ["response"] = ''
-
                                     QuestionUI = DictQuestions ["uid"]
                                     if len (block_item.columns) == 1 and len (block_item.rows) > row+1: 
                                         if  block_item.cell(row+1, col).text.strip() == '' or below_is_a_size_for_response == True: 
@@ -460,7 +461,7 @@ def Read_Questions_in_docx (PathFolderSource, PathForOutputsAndLogs
             # Suppression du fichier AAP vierge du PathFolderSource
             try:
                 file.unlink()
-                print(f"Supprimé : {file}")
+                print(f"Suppression fichier AAP vierge en fin de fonction Read : {file}")
             except Exception as e:
                 print(f"Erreur en fin de fonction read AAP lors de la suppression de {file} : {e}")
 
@@ -480,15 +481,15 @@ def Write_Answers_in_docx(List_UIDQuestionsSizeAnswer, PathFolderSource, PathFor
     Génère un fichier Word annoté + un fichier récapitulatif Q/A.
     """
 
-    for file in glob.glob(os.path.join(PathFolderSource, '*.docx')):
-        if "UID" not in os.path.basename(file):
+    for file in PathFolderSource.iterdir(): 
+        if "UID" not in file.name : 
             continue  # On ne traite que les fichiers avec UID
 
         try:
-            with open(file, 'rb') as f:
+            with file.open(mode="rb+") as f: 
                 document = Document(f)
 
-            NameOfDocument = os.path.basename(file)
+            NameOfDocument = file.name 
 
             # === Nettoyage des balises dans les paragraphes
             for para in document.paragraphs:
@@ -569,9 +570,8 @@ def Write_Answers_in_docx(List_UIDQuestionsSizeAnswer, PathFolderSource, PathFor
 
         # === Effacement du fichier source "avec UID"
         try:
-            #file.unlink()  # Méthode pathlib pour supprimer 
-            os.remove(file) # A VERIFIER
-            print(f"Supprimé : {file}")
+            file.unlink()  
+            print(f"Suppression fichier avec UID en fin de fonction Write : {file}")
         except Exception as e:
             MessageError = str(datetime.now()) + ' Erreur en fin de la fonction Write AAP lors de la suppression de {file} : {e}'
             logging.error(MessageError)

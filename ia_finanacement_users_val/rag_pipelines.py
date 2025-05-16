@@ -623,7 +623,7 @@ def QA_pipeline(queries: list, return_sources=True):
     # question directe
     if "uid" not in queries[0]:
         for q in queries:
-            queries_norm.append({"uid": "xxx", "question": q["question"]})
+            queries_norm.append({"uid": "xxx", "question": q["question"], "size_answer": q["size_answer"]})
     else:
         queries_norm=queries
 
