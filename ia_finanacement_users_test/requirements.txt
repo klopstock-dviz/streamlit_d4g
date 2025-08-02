@@ -1,6 +1,7 @@
 accelerate
 aioboto3
 aiohttp
+nest-asyncio
 
 # database packages
 graspologic
