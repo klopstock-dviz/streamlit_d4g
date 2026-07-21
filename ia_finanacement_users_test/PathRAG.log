@@ -153,3 +153,11 @@
 2025-04-13 19:17:49,499 - PathRAG - INFO - kw_prompt result:
 2025-04-13 19:17:54,362 - PathRAG - INFO - Local query uses 40 entites, 4 relations, 3 text units
 2025-04-13 19:17:55,157 - PathRAG - INFO - Global query uses 50 entites, 40 relations, 3 text units
+2025-10-02 12:57:41,849 - PathRAG - INFO - Logger initialized for working directory: /home/chougar/Documents/GitHub/streamlit_d4g/ia_finanacement_users_test/storage/graph_stores/90ca2c8e0d3b493c088d866aa16c14b0e74020d735dfa22f926a4ba938994783
+2025-10-02 12:57:41,852 - PathRAG - INFO - Load KV llm_response_cache with 0 data
+2025-10-02 12:57:41,854 - PathRAG - INFO - Load KV full_docs with 1 data
+2025-10-02 12:57:41,856 - PathRAG - INFO - Load KV text_chunks with 22 data
+2025-10-02 12:57:41,897 - PathRAG - INFO - Loaded graph from /home/chougar/Documents/GitHub/streamlit_d4g/ia_finanacement_users_test/storage/graph_stores/90ca2c8e0d3b493c088d866aa16c14b0e74020d735dfa22f926a4ba938994783/graph_chunk_entity_relation.graphml with 315 nodes, 197 edges
+2025-10-02 13:06:43,648 - PathRAG - INFO - kw_prompt result:
+2025-10-02 13:07:58,010 - PathRAG - INFO - Local query uses 40 entites, 7 relations, 3 text units
+2025-10-02 13:07:58,973 - PathRAG - INFO - Global query uses 35 entites, 40 relations, 3 text units
